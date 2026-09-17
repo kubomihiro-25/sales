@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NewtonX Sales Copilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">N</div>
+        <div><strong>NewtonX</strong><span>Sales Copilot</span></div>
+      </div>
+      <div class="workspace-label">WORKSPACE <span>⌄</span></div>
+      <div class="workspace-select">営業本部 <span>⋮</span></div>
+      <nav class="side-nav" aria-label="メインナビゲーション">
+        <a class="nav-item active" href="#"><span>▦</span>商談ワークスペース</a>
+        <a class="nav-item" href="#library"><span>▤</span>商材ライブラリ <b>24</b></a>
+        <a class="nav-item" href="#"><span>◷</span>アクティビティ</a>
+      </nav>
+      <div class="tree-heading"><span>商談ナレッジ</span><button id="addCompany" title="企業を追加">＋</button></div>
+      <div class="knowledge-tree" id="knowledgeTree"></div>
+      <div class="sidebar-footer">
+        <div class="sync-status"><i></i><span>NewtonXADK 接続中</span></div>
+        <div class="user-card"><div class="avatar">田</div><div><strong>田中 恒一</strong><small>営業マネージャー</small></div><span>⌄</span></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumb"><span>商談ワークスペース</span><b>/</b><strong id="currentBreadcrumb">ネクストウェーブ株式会社</strong></div>
+        <div class="top-actions"><button class="icon-btn" title="検索">⌕</button><button class="icon-btn" title="通知">♧<em></em></button><button class="help-btn">?</button></div>
+      </header>
+      <section class="content">
+        <div class="page-heading">
+          <div><p class="eyebrow">CUSTOMER ACCOUNT</p><h1 id="companyName">ネクストウェーブ株式会社</h1><div class="company-meta"><span>▣ 東京都渋谷区</span><span>◉ 取引中</span><span>最終接触 2024/06/12</span></div></div>
+          <button class="secondary-btn" id="libraryBtn">▤ 商材ライブラリ</button>
+        </div>
+        <div class="ai-tabs">
+          <button class="ai-tab active" data-tab="scenario"><span class="tab-icon purple">✦</span><span><strong>商談シナリオ生成AI</strong><small>商談前の準備をアシスト</small></span><span class="tab-arrow">→</span></button>
+          <button class="ai-tab" data-tab="ball"><span class="tab-icon blue">◌</span><span><strong>ボール管理AI</strong><small>商談後の分析と次回提案</small></span><span class="tab-arrow">→</span></button>
+        </div>
+        <div class="tab-panel" id="scenarioPanel">
+          <div class="panel-intro"><div><h2>商談シナリオを作成</h2><p>顧客情報と商談の目的から、成果につながる会話の道筋を設計します。</p></div><span class="ai-badge">✦ NewtonXADK AI</span></div>
+          <div class="form-card">
+            <div class="form-grid">
+              <label>商談目的<select id="purpose"><option>案件獲得</option><option>要件確認</option><option>人材提案</option><option>単価交渉</option><option>関係構築</option><option>定例フォロー</option><option>トラブルフォロー</option><option>信頼回復</option><option>ビジョン共有</option><option>顧客課題整理</option><option>取引拡大</option></select></label>
+              <label>商談状況<select id="status"><option>初回商談・課題ヒアリング前</option><option>提案内容を検討中</option><option>社内稟議・決裁待ち</option><option>既存顧客への定例フォロー</option></select></label>
+            </div>
+            <label>今回の商談で確認したいこと<textarea id="scenarioInput" rows="3" placeholder="例：来期のDX計画と開発体制の課題を把握し、Azure移行支援の提案につなげたい"></textarea></label>
+            <div class="form-footer"><span class="hint">顧客の過去の商談履歴も自動で参照します</span><button class="primary-btn" id="generateScenario">✦ シナリオを生成</button></div>
+          </div>
+          <div id="scenarioOutput" class="output-card hidden"></div>
+        </div>
+        <div class="tab-panel hidden" id="ballPanel">
+          <div class="panel-intro"><div><h2>商談を振り返り、次の一手へ</h2><p>議事録やメモを貼り付けるだけで、案件の現在地と次回提案を整理します。</p></div><span class="ai-badge blue-badge">✦ NewtonXADK AI</span></div>
+          <div class="form-card">
+            <label>議事録・商談メモ<textarea id="meetingInput" rows="7" placeholder="商談の文字起こし、議事録、メモを貼り付けてください&#10;&#10;例：先方の情報システム部 山田様と打ち合わせ。来期に基幹システム刷新を検討..."></textarea></label>
+            <div class="form-footer"><span class="hint">入力内容はこのワークスペースに保存されます</span><button class="primary-btn blue-btn" id="analyzeMeeting">◌ 商談を分析</button></div>
+          </div>
+          <div id="ballOutput" class="output-card hidden"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
