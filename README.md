@@ -1,6 +1,17 @@
 ﻿# NewtonX Sales Copilot
 
-IT営業商談アシスタント。Python/Flask + Gunicorn の本番デプロイ構成です。
+IT営業商談アシスタント。配布用のWindowsネイティブデスクトップアプリと、サーバー運用向けのFlask/Gunicorn構成を提供します。
+
+## Windowsデスクトップアプリ
+
+`build_exe.ps1`で、Webブラウザーを使わないTkinterネイティブGUIをビルドできます。画面はWeb版と同じ配色・カード・タブ構成で、商談ナレッジを左側、商談シナリオ生成AIとボール管理AIを右側に配置しています。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build_exe.ps1 -OutputDirectory .\NewtonXSalesCopilot
+.\NewtonXSalesCopilot\NewtonXSalesCopilot.exe
+```
+
+配布先にPythonは不要です。起動後、「接続設定」から利用者ごとのPATとNewtonXモデルを設定してください。
 
 ## ローカル
 
