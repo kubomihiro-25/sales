@@ -34,7 +34,7 @@
     <main class="main">
       <header class="topbar">
         <div class="breadcrumb"><span>商談ワークスペース</span><b>/</b><strong id="currentBreadcrumb">ネクストウェーブ株式会社</strong></div>
-        <div class="top-actions"><button class="icon-btn" title="検索">⌕</button><button class="icon-btn" title="通知">♧<em></em></button><button class="help-btn">?</button></div>
+        <div class="top-actions"><button class="icon-btn" title="&#x691c;&#x7d22;">&#x2315;</button><button class="icon-btn" title="&#x901a;&#x77e5;">&#x2667;<em></em></button><button class="settings-btn" id="settingsBtn">&#x2699; &#x63a5;&#x7d9a;&#x8a2d;&#x5b9a;</button><button class="help-btn">?</button></div>
       </header>
       <section class="content">
         <div class="page-heading">
@@ -67,6 +67,17 @@
         </div>
       </section>
     </main>
+  </div>
+  <div class="settings-backdrop hidden" id="settingsBackdrop">
+    <section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-header"><div><p class="eyebrow">INTEGRATION</p><h2 id="settingsTitle">NewtonXADK &#x63a5;&#x7d9a;&#x8a2d;&#x5b9a;</h2></div><button class="modal-close" id="closeSettings" aria-label="&#x9589;&#x3058;&#x308b;">?</button></div>
+      <p class="settings-description">&#x30a2;&#x30af;&#x30bb;&#x30b9;&#x30c8;&#x30fc;&#x30af;&#x30f3;&#x306f;&#x3053;&#x306e;&#x30d6;&#x30e9;&#x30a6;&#x30b6;&#x306b;&#x4fdd;&#x5b58;&#x3055;&#x308c;&#x3001;NewtonXADK API&#x3078;&#x306e;&#x30ea;&#x30af;&#x30a8;&#x30b9;&#x30c8;&#x306b;Bearer&#x30c8;&#x30fc;&#x30af;&#x30f3;&#x3068;&#x3057;&#x3066;&#x4ed8;&#x4e0e;&#x3055;&#x308c;&#x307e;&#x3059;&#x3002</p>
+      <label class="settings-label">API&#x30d9;&#x30fc;&#x30b9;URL<input id="apiBaseUrl" type="url" placeholder="http://127.0.0.1:8000"></label>
+      <label class="settings-label">&#x30a2;&#x30af;&#x30bb;&#x30b9;&#x30c8;&#x30fc;&#x30af;&#x30f3;<div class="token-input"><input id="accessToken" type="password" placeholder="NewtonXADK&#x30a2;&#x30af;&#x30bb;&#x30b9;&#x30c8;&#x30fc;&#x30af;&#x30f3;"><button type="button" id="toggleToken">&#x8868;&#x793a;</button></div></label>
+      <label class="settings-label">&#x0041;&#x0049;&#x30e2;&#x30c7;&#x30eb;<select id="aiModel"><option value="gpt-4o">GPT-4o</option><option value="gpt-4o-mini">GPT-4o mini</option><option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option><option value="gemini-1.5-pro">Gemini 1.5 Pro</option><option value="newtonxadk-default">NewtonXADK Default</option></select></label><button type="button" class="model-load-btn" id="loadModels">NewtonXモデル一覧を取得</button>
+      <div class="settings-status" id="settingsStatus"><i></i><span>&#x672a;&#x63a5;&#x7d9a;</span></div>
+      <div class="settings-actions"><button class="secondary-btn" id="testConnection">&#x63a5;&#x7d9a;&#x30c6;&#x30b9;&#x30c8;</button><button class="primary-btn" id="saveSettings">&#x8a2d;&#x5b9a;&#x3092;&#x4fdd;&#x5b58;</button></div>
+    </section>
   </div>
   <div class="toast" id="toast"></div>
   <script src="app.js"></script>
