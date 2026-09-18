@@ -73,60 +73,61 @@ class SalesCopilotDesktop(tk.Tk):
         self._label(brand_text, "NewtonX", font=("Yu Gothic UI", 15, "bold")).pack(anchor="w")
         self._label(brand_text, "Sales Copilot", fg="#99a2b4", font=("Yu Gothic UI", 9)).pack(anchor="w")
 
-        self._label(self.sidebar, "WORKSPACE", fg="#a0a9ba", font=("Yu Gothic UI", 9, "bold")).pack(anchor="w", padx=25)
-        workspace = tk.Frame(self.sidebar, bg="white", highlightbackground=COLORS["line"], highlightthickness=1)
-        workspace.pack(fill="x", padx=20, pady=(6, 20))
-        self._label(workspace, "営業本部", font=("Yu Gothic UI", 10, "bold")).pack(side="left", padx=11, pady=9)
-        self._label(workspace, "⋮", fg="#99a2b4", font=("Yu Gothic UI", 14)).pack(side="right", padx=10)
-
-        nav = tk.Frame(self.sidebar, bg="white")
-        nav.pack(fill="x", padx=14, pady=(0, 18))
-        self._nav_button(nav, "▦  商談ワークスペース", True)
-        self._nav_button(nav, "▤  商材ライブラリ                 24", False, self._library_message)
-        self._nav_button(nav, "◷  アクティビティ", False)
-
         heading = tk.Frame(self.sidebar, bg="white")
-        heading.pack(fill="x", padx=20, pady=(0, 8))
-        self._label(heading, "商談ナレッジ", fg="#a0a9ba", font=("Yu Gothic UI", 9, "bold")).pack(side="left")
-        self._button(heading, "＋", self._add_company, color=COLORS["purple_light"], fg=COLORS["purple"], padx=7, pady=2).pack(side="right")
+        heading.pack(fill="x", padx=20, pady=(0, 12))
+        self._label(heading, "商談ナレッジ", fg=COLORS["ink"], font=("Yu Gothic UI", 15, "bold")).pack(side="left")
+        self._button(heading, "＋", self._add_company, color=COLORS["purple_light"], fg=COLORS["purple"], padx=8, pady=3).pack(side="right")
 
         tree_frame = tk.Frame(self.sidebar, bg="white")
         tree_frame.pack(fill="both", expand=True, padx=14)
         self.tree = ttk.Treeview(tree_frame, show="tree", style="Copilot.Treeview")
         self.tree.pack(fill="both", expand=True)
-        self._populate_tree()
+        self.tree.bind("<<TreeviewSelect>>", self._select_workspace)
+        self._load_workspaces()
 
         footer = tk.Frame(self.sidebar, bg="white", highlightbackground=COLORS["line"], highlightthickness=1)
         footer.pack(fill="x", side="bottom", padx=14, pady=(12, 0))
-        self._label(footer, "●  NewtonXADK 接続中", fg=COLORS["green"], font=("Yu Gothic UI", 9)).pack(anchor="w", padx=8, pady=11)
         user = tk.Frame(footer, bg="white")
         user.pack(fill="x", padx=4, pady=(0, 10))
-        tk.Label(user, text="田", bg="#ffe1d5", fg="#a65438", font=("Yu Gothic UI", 10), width=2, height=1).pack(side="left")
-        self._label(user, "田中 恒一", font=("Yu Gothic UI", 9, "bold")).pack(side="left", padx=8)
-        self._label(user, "営業マネージャー", fg="#98a2b2", font=("Yu Gothic UI", 8)).pack(side="left")
+        self.account_avatar = tk.Label(user, text="?", bg="#ffe1d5", fg="#a65438", font=("Yu Gothic UI", 10), width=2, height=1)
+        self.account_avatar.pack(side="left")
+        self.account_name = self._label(user, "アカウント情報を取得中...", font=("Yu Gothic UI", 9, "bold"))
+        self.account_name.pack(side="left", padx=8)
+        self.account_org = self._label(user, "", fg="#98a2b2", font=("Yu Gothic UI", 8))
+        self.account_org.pack(side="left")
 
     def _nav_button(self, parent: tk.Frame, text: str, active: bool, command: Callable[[], None] | None = None) -> None:
         self._button(parent, text, command or (lambda: None), color=COLORS["purple_light"] if active else "white", fg=COLORS["purple"] if active else "#7a8699", padx=11, pady=9, anchor="w").pack(fill="x", pady=2)
 
-    def _populate_tree(self) -> None:
-        records = [
-            ("株式会社アトラス", "山田 太郎", "情報システム部 部長", ["基幹システム刷新", "定例フォロー 06/12"]),
-            ("ネクストソリューションズ", "佐藤 花子", "DX推進室", ["AI活用支援"]),
-            ("グローバルテック", "鈴木 一郎", "開発部", ["人材提案"]),
-        ]
-        for company, person, role, deals in records:
-            company_id = self.tree.insert("", "end", text=f"▣  {company}", open=True)
-            person_id = self.tree.insert(company_id, "end", text=f"♙  {person}", open=True)
-            role_id = self.tree.insert(person_id, "end", text=f"◆  {role}", open=True)
-            for deal in deals:
-                self.tree.insert(role_id, "end", text=f"▤  {deal}")
+    def _load_workspaces(self) -> None:
+        self.tree.delete(*self.tree.get_children())
+        def worker() -> None:
+            try:
+                workspaces = (self.connection or NewtonXConnection()).company_workspaces()
+                self.after(0, lambda: self._render_workspaces(workspaces))
+            except Exception as error:
+                self.after(0, lambda: self._render_workspaces([], str(error)))
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _render_workspaces(self, workspaces: list[dict[str, str]], error: str = "") -> None:
+        self.tree.delete(*self.tree.get_children())
+        for workspace in workspaces:
+            self.tree.insert("", "end", text=f"▣  {workspace['name']}", values=(workspace["uid"],))
+
+    def _select_workspace(self, _event: object) -> None:
+        selected = self.tree.selection()
+        if not selected:
+            return
+        text = self.tree.item(selected[0], "text").replace("▣  ", "", 1).strip()
+        if text:
+            self.company_label.configure(text=text)
 
     def _build_main(self) -> None:
         topbar = tk.Frame(self.main, bg=COLORS["white"], height=64, highlightbackground=COLORS["line"], highlightthickness=1)
         topbar.pack(fill="x")
         topbar.pack_propagate(False)
-        self._label(topbar, "商談ワークスペース   /   ", fg="#8c98aa", font=("Yu Gothic UI", 10)).pack(side="left", padx=38)
-        self._label(topbar, "株式会社アトラス", fg="#46546a", font=("Yu Gothic UI", 10)).place(x=160, y=23)
+        self._label(topbar, "商談ナレッジ   /   ", fg="#8c98aa", font=("Yu Gothic UI", 10)).pack(side="left", padx=38)
+        self._label(topbar, "企業を選択してください", fg="#46546a", font=("Yu Gothic UI", 10)).place(x=145, y=23)
         actions = tk.Frame(topbar, bg="white")
         actions.pack(side="right", padx=28)
         self.status_label = self._label(topbar, "接続状態を確認中...", fg="#159466", font=("Yu Gothic UI", 9))
@@ -143,11 +144,9 @@ class SalesCopilotDesktop(tk.Tk):
         left = tk.Frame(heading, bg=COLORS["bg"])
         left.pack(side="left")
         self._label(left, "CUSTOMER ACCOUNT", fg="#9ca7b7", font=("Yu Gothic UI", 9, "bold")).pack(anchor="w")
-        self.company_label = self._label(left, "株式会社アトラス", font=("Yu Gothic UI", 23, "bold"))
+        self.company_label = self._label(left, "企業を選択してください", font=("Yu Gothic UI", 23, "bold"))
         self.company_label.pack(anchor="w", pady=(4, 7))
-        self._label(left, "▣ 東京都渋谷区    ", fg="#8792a4", font=("Yu Gothic UI", 9)).pack(side="left")
-        self._label(left, "● 取引中    最終接触 2024/06/12", fg=COLORS["green"], font=("Yu Gothic UI", 9)).pack(side="left")
-        self._button(heading, "▤  商材ライブラリ", self._library_message, color="white", fg="#53627a", padx=13, pady=9).pack(side="right", anchor="s")
+        self._label(left, "左側の＋から企業ワークスペースを作成してください", fg="#8792a4", font=("Yu Gothic UI", 9)).pack(side="left")
 
         self.tabs = tk.Frame(content, bg=COLORS["bg"])
         self.tabs.pack(fill="x", pady=(0, 22))
@@ -292,17 +291,53 @@ class SalesCopilotDesktop(tk.Tk):
         messagebox.showinfo("商材ライブラリ", "商材ライブラリ（24件）を開きました。", parent=self)
 
     def _add_company(self) -> None:
-        messagebox.showinfo("商談ナレッジ", "顧客情報を追加するにはNewtonXADKへ接続してください。", parent=self)
+        dialog = tk.Toplevel(self)
+        dialog.title("企業ワークスペースを作成")
+        dialog.geometry("480x220")
+        dialog.configure(background=COLORS["bg"])
+        dialog.transient(self)
+        dialog.grab_set()
+        frame = tk.Frame(dialog, bg="white", padx=22, pady=20)
+        frame.pack(fill="both", expand=True, padx=16, pady=16)
+        self._label(frame, "企業名", bg="white", fg="#53627a", font=("Yu Gothic UI", 9, "bold")).pack(anchor="w")
+        name = ttk.Entry(frame, style="Copilot.TEntry")
+        name.pack(fill="x", pady=(5, 8))
+        self._label(frame, "NewtonX Chatの新規フォルダーとして作成されます。", bg="white", fg="#8490a3", font=("Yu Gothic UI", 9)).pack(anchor="w")
+        self._label(frame, NewtonXConnection.CHAT_URL, bg="white", fg="#9ca7b7", font=("Yu Gothic UI", 8)).pack(anchor="w", pady=(2, 0))
+        actions = tk.Frame(frame, bg="white")
+        actions.pack(fill="x", side="bottom")
+        self._button(actions, "キャンセル", dialog.destroy, color="white", fg="#53627a").pack(side="right", padx=(8, 0))
+        def create() -> None:
+            try:
+                workspace = (self.connection or NewtonXConnection()).create_company_workspace(name.get())
+                dialog.destroy()
+                self._load_workspaces()
+                messagebox.showinfo("商談ナレッジ", f"「{workspace['name']}」を作成しました。", parent=self)
+            except Exception as error:
+                messagebox.showerror("作成エラー", str(error), parent=dialog)
+        self._button(actions, "企業ワークスペースを作成", create, color=COLORS["purple"], fg="white").pack(side="right")
 
     def _load_status(self) -> None:
-        try:
-            self.connection = NewtonXConnection()
-            status = self.connection.status()
-            if hasattr(self, "status_label"):
-                self.status_label.configure(text=f"● {status.get('default_model')}" if status["configured"] else "● PAT未設定", fg=COLORS["green"] if status["configured"] else COLORS["muted"])
-        except Exception:
-            if hasattr(self, "status_label"):
-                self.status_label.configure(text="● ADK未接続", fg="#c47532")
+        def worker() -> None:
+            try:
+                connection = NewtonXConnection()
+                status = connection.status()
+                account = connection.account_info() if status["configured"] else {}
+                self.after(0, lambda: self._apply_account(status, account))
+            except Exception:
+                self.after(0, lambda: self._apply_account({}, {}))
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _apply_account(self, status: dict[str, object], account: dict[str, str]) -> None:
+        self.connection = self.connection or NewtonXConnection()
+        configured = bool(status.get("configured"))
+        if hasattr(self, "status_label"):
+            self.status_label.configure(text=f"● {status.get('default_model')}" if configured else "● PAT未設定", fg=COLORS["green"] if configured else COLORS["muted"])
+        name = account.get("name") or "アカウント未取得"
+        organization = account.get("organization") or account.get("email") or ""
+        self.account_name.configure(text=name)
+        self.account_org.configure(text=organization)
+        self.account_avatar.configure(text=name[:1] if name and name != "アカウント未取得" else "?")
 
     def _open_settings(self) -> None:
         dialog = tk.Toplevel(self)
@@ -324,6 +359,8 @@ class SalesCopilotDesktop(tk.Tk):
         self._label(frame, "AIモデル", bg="white", fg="#53627a", font=("Yu Gothic UI", 9, "bold")).pack(anchor="w")
         model = ttk.Combobox(frame, state="readonly", style="Copilot.TCombobox")
         model.pack(fill="x", pady=(4, 9))
+        account_label = self._label(frame, "アカウント情報: 取得前", bg="white", fg="#8490a3", font=("Yu Gothic UI", 9))
+        account_label.pack(anchor="w", pady=(0, 8))
         try:
             current = self.connection or NewtonXConnection()
             status = current.status()
@@ -341,7 +378,14 @@ class SalesCopilotDesktop(tk.Tk):
                 messagebox.showinfo("モデル一覧", f"{len(self.models)}件のモデルを取得しました。", parent=dialog)
             except Exception as error:
                 messagebox.showerror("取得エラー", str(error), parent=dialog)
+        def load_account() -> None:
+            try:
+                account = (self.connection or NewtonXConnection()).account_info()
+                account_label.configure(text=f"アカウント情報: {account.get('name') or '氏名未取得'} / {account.get('organization') or account.get('email') or '所属未取得'}")
+            except Exception as error:
+                messagebox.showerror("アカウント取得エラー", str(error), parent=dialog)
         self._button(frame, "NewtonXモデル一覧を取得", load_models, color=COLORS["purple_light"], fg=COLORS["purple"], padx=10, pady=6).pack(anchor="w")
+        self._button(frame, "アカウント情報を取得", load_account, color=COLORS["blue_light"], fg=COLORS["blue"], padx=10, pady=6).pack(anchor="w", pady=(6, 0))
         actions = tk.Frame(frame, bg="white")
         actions.pack(fill="x", side="bottom", pady=(15, 0))
         self._button(actions, "キャンセル", dialog.destroy, color="white", fg="#53627a").pack(side="right", padx=(8, 0))

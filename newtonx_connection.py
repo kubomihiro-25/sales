@@ -22,6 +22,8 @@ class ModelOption:
 class NewtonXConnection:
     """Use the same ADK config and model discovery path as othello_py."""
 
+    CHAT_URL = "https://seraku.newton-x.net/aichat/chat"
+
     def __init__(self) -> None:
         if ConfigManager is None or NewtonXClient is None:
             raise RuntimeError("NewtonX ADKがインストールされていません。wheelをインストールしてください。")
@@ -66,3 +68,51 @@ class NewtonXConnection:
 
     def client(self) -> Any:
         return NewtonXClient(self.config_manager)
+
+    def account_info(self) -> dict[str, str]:
+        """Fetch the authenticated NewtonX account for display in the desktop app."""
+        client = self.client()
+        if not client.authenticate():
+            raise RuntimeError("NewtonXの認証に失敗しました。PATを確認してください。")
+        payload = client.get_user_info() or {}
+        if not isinstance(payload, dict):
+            raise RuntimeError("NewtonXからアカウント情報を取得できませんでした。")
+        departments = payload.get("departments") or []
+        department_names = [
+            str(item.get("name") or "").strip()
+            for item in departments
+            if isinstance(item, dict) and str(item.get("name") or "").strip()
+        ]
+        return {
+            "name": str(payload.get("displayName") or payload.get("name") or payload.get("userName") or payload.get("username") or "").strip(),
+            "organization": str(payload.get("department") or payload.get("companyName") or payload.get("organization") or (department_names[0] if department_names else "") or payload.get("jobTitle") or "").strip(),
+            "email": str(payload.get("mail") or payload.get("email") or " ").strip(),
+        }
+
+    def company_workspaces(self) -> list[dict[str, str]]:
+        """Return real NewtonX folders; no placeholder knowledge is generated."""
+        client = self.client()
+        if not client.authenticate():
+            raise RuntimeError("NewtonXの認証に失敗しました。PATを確認してください。")
+        folders = client.get_folders()
+        return [
+            {
+                "uid": str(item.get("uid") or item.get("id") or item.get("uuid") or ""),
+                "name": str(item.get("name") or "").strip(),
+            }
+            for item in folders
+            if isinstance(item, dict) and str(item.get("name") or "").strip()
+        ]
+
+    def create_company_workspace(self, name: str) -> dict[str, str]:
+        """Create a company folder through the NewtonX chat/folder API."""
+        clean_name = name.strip()
+        if not clean_name:
+            raise ValueError("企業名を入力してください。")
+        client = self.client()
+        if not client.authenticate():
+            raise RuntimeError("NewtonXの認証に失敗しました。PATを確認してください。")
+        uid = client.create_folder(clean_name)
+        if not uid:
+            raise RuntimeError("NewtonXに企業ワークスペースを作成できませんでした。")
+        return {"uid": str(uid), "name": clean_name}
